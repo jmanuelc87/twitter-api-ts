@@ -1,6 +1,5 @@
 import * as https from "https";
 import * as hmacsha1 from "hmacsha1";
-import * as hash from 'hmacsha1';
 
 export class Twitter {
 
