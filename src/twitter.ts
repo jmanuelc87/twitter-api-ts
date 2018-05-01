@@ -3,8 +3,6 @@ import * as hmacsha1 from "hmacsha1";
 
 export class Twitter {
 
-    private url = 'api.twitter.com';
-
     private accessToken: string;
     private accessTokenSecret: string;
     private consumerKey: string;
@@ -23,14 +21,14 @@ export class Twitter {
     }
 
 
-    public request(method: string, path: string, params: Map<string, string>) {
+    public request(method: string, url: string, path: string, params: Map<string, string>) {
         let options = {
-            host: this.url,
+            host: url,
             path: this.buildPath(path, params),
             port: 443,
             method: method.toUpperCase(),
             headers: {
-                "Authorization": this.buildHeaderString('https', method, path, params)
+                "Authorization": this.buildHeaderString('https', method, url, path, params)
             }
         };
 
@@ -44,13 +42,13 @@ export class Twitter {
                 });
 
                 response.on('end', () => {
-                    resolve(JSON.parse(data));
+                    resolve(data);
                 });
             });
 
             req.on('error', err => {
                 reject(err);
-            })
+            });
 
             req.end();
         });
@@ -58,14 +56,14 @@ export class Twitter {
 
 
 
-    buildHeaderString(protocol: string, method: string, path: string, params: Map<string, string>) {
+    buildHeaderString(protocol: string, method: string, url: string, path: string, params: Map<string, string>) {
         // build the oauth defined parameters
         let oauthParams: Map<string, string> = this.buildOAuthHeader();
         // join params and oauthParams
         let result = this.joinMaps(params, oauthParams);
         // encode both params in a string
         let encodedParams = this.encodeMapToQueryString(result);
-        let completeUrl = `${protocol}://${this.url}${path}`
+        let completeUrl = `${protocol}://${url}${path}`
         let signatureBase = this.createSignatureBase(method, completeUrl, encodedParams);
         let hash = this.generateHashSignature(signatureBase);
         oauthParams.set('oauth_signature', hash);
