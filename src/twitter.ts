@@ -1,24 +1,21 @@
 import * as https from "https";
 import * as hmacsha1 from "hmacsha1";
 
+export interface OAuth {
+    accessToken: string;
+    accessTokenSecret: string;
+    consumerKey: string;
+    consumerSecret: string;
+}
+
+
 export class Twitter {
 
-    private accessToken: string;
-    private accessTokenSecret: string;
-    private consumerKey: string;
-    private consumerSecret: string;
+    private oauthParams = new Map<string, any>();
 
     constructor(
-        accessToken: string,
-        accessTokenSecret: string,
-        consumerKey: string,
-        consumerSecret: string
-    ) {
-        this.accessToken = accessToken;
-        this.accessTokenSecret = accessTokenSecret;
-        this.consumerKey = consumerKey;
-        this.consumerSecret = consumerSecret;
-    }
+        private oauth: OAuth
+    ) { }
 
 
     public request(method: string, url: string, path: string, params: Map<string, string>) {
@@ -89,18 +86,21 @@ export class Twitter {
         return `${path}?${this.encodeMapToQueryString(params)}`;
     }
 
+    setOauthParam(key: string, param: string) {
+        this.oauthParams.set(key, param);
+    }
+
     /**
      * Generates an OAuth header conforming to the twitter specification
      */
     buildOAuthHeader() {
-        let auth = new Map<string, any>();
-        auth.set('oauth_consumer_key', this.consumerKey);
-        auth.set('oauth_nonce', this.buildOAuthNOnce());
-        auth.set('oauth_signature_method', 'HMAC-SHA1');
-        auth.set('oauth_timestamp', new Date().getTime() / 1000);
-        auth.set('oauth_token', this.accessToken);
-        auth.set('oauth_version', '1.0');
-        return auth;
+        this.oauthParams.set('oauth_consumer_key', this.oauth.consumerKey);
+        this.oauthParams.set('oauth_nonce', this.buildOAuthNOnce());
+        this.oauthParams.set('oauth_signature_method', 'HMAC-SHA1');
+        this.oauthParams.set('oauth_timestamp', new Date().getTime() / 1000);
+        this.oauthParams.set('oauth_token', this.oauth.accessToken);
+        this.oauthParams.set('oauth_version', '1.0');
+        return this.oauthParams;
     }
 
     /**
@@ -123,7 +123,7 @@ export class Twitter {
      * @param data the data to be hashed
      */
     generateHashSignature(data: string) {
-        let signingKey = `${this.consumerSecret}&${this.accessTokenSecret}`;
+        let signingKey = `${this.oauth.consumerSecret}&${this.oauth.accessTokenSecret}`;
         let hash = hmacsha1(signingKey, data);
         return hash;
     }

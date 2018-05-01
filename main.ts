@@ -1,22 +1,21 @@
-import { Twitter } from "./src/twitter";
+import { Twitter, OAuth } from "./src/twitter";
+import * as fs from "fs";
 
 
-let tweet = new Twitter(
-    "",
-    "",
-    "",
-    ""
-)
+let tweet = new Twitter({
+    accessToken: "",
+    accessTokenSecret: "",
+    consumerKey: "",
+    consumerSecret: ""
+})
 
 let params = new Map<string, string>();
-params.set('q', '#Nasa');
-params.set('count', '5');
+params.set('q', 'Fiesta');
+params.set('count', '100');
 
-let promise = tweet.request('GET', '/1.1/search/tweets.json', params);
+let promise = tweet.request('GET', 'api.twitter.com', '/1.1/search/tweets.json', params);
 
 
 promise.then(data => {
-    data.statuses.forEach(element => {
-        console.log(element.text);
-    });
+    fs.writeFileSync('twitterData.json', data);
 });
